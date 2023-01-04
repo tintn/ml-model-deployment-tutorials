@@ -1,0 +1,36 @@
+apiVersion: machinelearning.seldon.io/v1
+kind: SeldonDeployment
+metadata:
+  name: cifar10
+  namespace: default
+spec:
+  annotations:
+    seldon.io/engine-seldon-log-messages-externally: "true"
+  predictors:
+  - componentSpecs:
+    - hpaSpec:
+        maxReplicas: 2
+        metrics:
+        - resource:
+            name: cpu
+            targetAverageUtilization: 50
+          type: Resource
+        minReplicas: 1
+      spec:
+        containers:
+          - name: cifar10-pytorch
+            resources:
+              requests:
+                cpu: '0.5'
+              limits:
+                cpu: "0.5"
+    graph:
+      implementation: TRITON_SERVER
+      logger:
+        mode: all
+      modelUri: s3://<YOUR_BUCKET>/cifar10-model
+      name: cifar10-pytorch
+      type: MODEL
+      envSecretRefName: seldon-rclone-secret
+    name: default
+  protocol: v2
