@@ -22,8 +22,6 @@ spec:
             resources:
               requests:
                 cpu: '0.5'
-              limits:
-                cpu: "0.5"
     graph:
       implementation: TRITON_SERVER
       logger:
