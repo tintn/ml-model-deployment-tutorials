@@ -1,0 +1,37 @@
+apiVersion: machinelearning.seldon.io/v1
+kind: SeldonDeployment
+metadata:
+  name: cifar10
+  namespace: default
+spec:
+  annotations:
+    seldon.io/engine-seldon-log-messages-externally: "true"
+  predictors:
+  - componentSpecs:
+    - spec:
+        containers:
+          - name: cifar10-pytorch
+            resources:
+              requests:
+                cpu: '0.5'
+      kedaSpec:
+        pollingInterval: 15
+        minReplicaCount: 1
+        maxReplicaCount: 2
+        triggers:
+        - type: prometheus
+          metadata:
+            serverAddress: http://seldon-monitoring-prometheus.seldon-monitoring.svc.cluster.local:9090
+            metricName: access_frequency
+            threshold: '20'
+            query: avg(rate(seldon_api_executor_client_requests_seconds_count{deployment_name=~"cifar10"}[1m]))
+    graph:
+      implementation: TRITON_SERVER
+      logger:
+        mode: all
+      modelUri: s3://<YOUR_BUCKET>/cifar10-model
+      name: cifar10-pytorch
+      type: MODEL
+      envSecretRefName: seldon-rclone-secret
+    name: default
+  protocol: v2
